@@ -1,0 +1,70 @@
+name: 'epite-lol: Test, Deploy & Release'
+
+on: [push]
+
+jobs:
+  # ci:
+  #   name: 'epite-lol: Continuous Integration'
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     status: ${{ job.status }}
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - name: Use Node.js 15.x
+  #     uses: actions/setup-node@v2
+  #     with:
+  #       node-version: '15'
+  #   - name: 'Install NPM modules'
+  #     run: npm install
+  #   - name: 'Lint code'
+  #     run: eslint .
+  cd:
+    name: 'epite-lol: Continuous Deployment'
+    # needs: ci
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ job.status }}
+    env:
+      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Store current application version
+      id: currentversion
+      run: |
+        echo ::set-output name=version::$(cat ./package.json | grep '"version"' | sed 's/.*"version": "\(.*\)".*/\1/;t')
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
+        aws-region: 'eu-west-3'
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build image
+      run: docker build -t epite-lol .
+    - name: Tag image
+      run: |
+        docker tag epite-lol $ECR_REGISTRY/epite-lol:latest
+        docker tag epite-lol $ECR_REGISTRY/epite-lol:${{ steps.currentversion.outputs.version }}
+    - name: Push image to Amazon ECR
+      run: |
+        docker push $ECR_REGISTRY/epite-lol:latest
+        docker push $ECR_REGISTRY/epite-lol:${{ steps.currentversion.outputs.version }}
+    - name: Download task definition
+      run: |
+        aws ecs describe-task-definition --task-definition cube-nine --query taskDefinition > task-definition.json
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: epite-lol
+        image: ${{ secrets.ECR_REGISTRY }}/epite-lol:latest
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: cube-nine
+        cluster: cube-nine
+        wait-for-service-stability: true
