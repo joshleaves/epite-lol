@@ -3,7 +3,7 @@ const routeReply = (res, code, html) => {
 }
 
 const routeIdxHtml = `
-  <h1>epiLOL macro generator <span style="font-size:30%;"> by <a href="http://twitter.com/JoshLeaves">JoshLeaves</a></h1>
+  <h1>epiLOL macro generator <span style="font-size:30%;"> by <a href="http://twitter.com/JoshLeaves">JoshLeaves</a> (with auto-deploy)</h1>
   <hr />
   <br />
   Url scheme:<br / >
