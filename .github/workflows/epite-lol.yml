@@ -52,8 +52,10 @@ jobs:
         docker push $ECR_REGISTRY/epite-lol:latest
         docker push $ECR_REGISTRY/epite-lol:${{ steps.currentversion.outputs.version }}
     - name: Download task definition
+      id: download-task
       run: |
         aws ecs describe-task-definition --task-definition cube-nine --query taskDefinition > task-definition.json
+        echo "::set-output name=revision::$(cat task-definition.json | jq .revision)"
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -68,3 +70,6 @@ jobs:
         service: cube-nine
         cluster: cube-nine
         wait-for-service-stability: true
+    - name: De-register previous revision
+      run: |
+        aws ecs deregister-task-definition --task-definition cube-nine:${{ steps.download-task.outputs.revision }}

@@ -1,5 +1,7 @@
+const appCodeVersion = require('./package.json')['version']
+
 const routeReply = (res, code, html) => {
-  return res.writeHead(code, { 'Content-Type': 'text/html' }).end(html)
+  return res.writeHead(code, { 'X-Application-Code-Version': appCodeVersion, 'Content-Type': 'text/html' }).end(html)
 }
 
 const routeIdxHtml = `

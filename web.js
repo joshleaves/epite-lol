@@ -4,6 +4,8 @@ const imagemagick = require('imagemagick')
 const pictureData = require('./data.js')
 const { routeIdx, route404, route500} = require('./routes')
 
+const appCodeVersion = require('./package.json')['version']
+
 const pictureRegex = /\/([a-z]+)(%1C(.*?)%1C(.*?))?\.png/i
 
 function displayPicture (res, path) {
@@ -34,7 +36,7 @@ function displayPicture (res, path) {
       console.dir(stderr)
       return route500(res)
     }
-    res.writeHead(200, {'Content-Type': 'image/png', 'Content-Length': stdout.length })
+    res.writeHead(200, { 'X-Application-Code-Version': appCodeVersion, 'Content-Type': 'image/png', 'Content-Length': stdout.length })
     return res.end(stdout, 'binary')
   })
 }
