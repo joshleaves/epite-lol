@@ -1,9 +1,10 @@
 {
-    "name": "lol.epite.ch",
-    "version": "2.2.0",
-    "dependencies": {
-        "cookie": "0.0.5",
-        "imagemagick": "0.1.2",
-        "node-ga": "0.1.1"
-    }
+  "name": "lol.epite.ch",
+  "version": "3.0.0",
+  "dependencies": {
+    "imagemagick": "0.1.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.3.0"
+  }
 }
